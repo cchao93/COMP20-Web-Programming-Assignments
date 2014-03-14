@@ -1,3 +1,9 @@
+// Chia-Chi (Victor) Chao
+// COMP20 Assignment 3
+//
+// Description: Shows a real-time T schedule with T stops on the map,
+//              finds the closest stop from user's current location
+//
 var request = new XMLHttpRequest();
 var current_color;
 
@@ -9,6 +15,7 @@ var NUM_BLUES = 12;
 var NUM_ORANGES = 19;
 var NUM_REDS = 22;
 
+// Arrays of T stops for all 3 lines, in alphabetical order
 blue_coords[6] = {"station":"Airport","lat":"42.374262","lng":"-71.030395"};
 blue_coords[8] = {"station":"Aquarium","lat":"42.359784","lng":"-71.051652"};
 blue_coords[2] = {"station":"Beachmont","lat":"42.39754234","lng":"-70.99231944"};
