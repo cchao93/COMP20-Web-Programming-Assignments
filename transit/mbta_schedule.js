@@ -81,7 +81,7 @@ function check_readyState()
 {
         if (request.readyState == 4 && request.status == 200) {
                 var request_data = JSON.parse(request.responseText);
-                create_stations(request_data["line"]);
+                create_stations(request_data);
         } else if (request.readyState == 4 && request.status == 500){
                 canvas = document.getElementById("map-canvas");
                 canvas.innerHTML = "Please refresh the page!";
@@ -91,8 +91,8 @@ function check_readyState()
 function init_map()
 {
         var mapOptions = {
-                center: new google.maps.LatLng(42.3581, 71.0636),
-                zoom: 8
+                center: new google.maps.LatLng(42.2129, 71.0337),
+                zoom: 12
         };
         map = new google.maps.Map(
                 document.getElementById("map-canvas"), mapOptions);
@@ -121,15 +121,14 @@ function mark_location(lat, lng)
                 position: location,
                 map: map 
         });
-        var info_window = new google.maps.InfoWindow();
-        google.maps.event.addListener(marker, 'click', function() {
-                info_window.setContent("I am here at "+lat+", "+lng);
-                info_window.open(map, marker);
-        });
+        info_window = new google.maps.InfoWindow();
+        info_window.setContent("I am here at "+lat+", "+lng);
+        info_window.open(map, marker);
 }
 
-function create_stations(color)
+function create_stations(request_data)
 {
+        var color = request_data["line"];
         if (color == "blue") {
                 for (var i = 0; i < NUM_BLUES; i++) {
                         var lat = blue_coords[i].lat;
@@ -140,6 +139,7 @@ function create_stations(color)
                                 map: map,
                                 icon: "blu-circle.png"
                         });
+                        display_schedule(request_data, marker, i);
                 }
         } else if (color == "orange") {
                 for (var i = 0; i < NUM_ORANGES; i++) {
@@ -151,6 +151,7 @@ function create_stations(color)
                                 map: map,
                                 icon: "ylw-circle.png"
                         });
+                        display_schedule(request_data, marker, i);
                 }
         } else if (color == "red") {
                 for (var i = 0; i < NUM_REDS; i++) {
@@ -162,7 +163,50 @@ function create_stations(color)
                                 map: map,
                                 icon: "pink-circle.png"
                         });
+                        display_schedule(request_data, marker, i);
                 }
         }
 }
 
+function display_schedule(request_data, marker, stop_id)
+{
+        google.maps.event.addListener(marker, 'click', function() {
+                info_window.setContent(parse_schedule_data(request_data, stop_id));
+                info_window.open(map, marker);
+        });
+}
+
+function parse_schedule_data(request_data, stop_id)
+{
+        var stop;
+        var min;
+        var sec;
+        var color = request_data["line"];
+        if (color == "blue") {
+                stop = blue_coords[stop_id].station;
+        } else if (color == "orange") {
+                stop = orange_coords[stop_id].station;
+        } else {
+                stop = red_coords[stop_id].station;
+        }
+        var table = document.createElement("table");
+        table = "Stop: " + stop;
+        table += "<table><tr><th>Line</th><th>Stop ID</th><th>Arrived In</th><th>Destination</th></tr>";
+        var trips = request_data["schedule"];
+        for (var i = 0; i < trips.length; i++) {
+                var stops = trips[i]["Predictions"];
+                for (var j = 0; j < stops.length; j++) {
+                        if (stop == stops[j]["Stop"]) {
+                                min = Math.floor(stops[j]["Seconds"] / 60);
+                                sec = stops[j]["Seconds"] % 60;
+                                sec = ("0" + sec).slice(-2);
+                                table += "<tr><td>" + request_data["line"] + "</td><td>"
+                                      + stops[j]["StopID"] + "</td><td>"
+                                      + min + ":" + sec + "</td><td>"
+                                      + trips[i]["Destination"] + "</td></tr>";
+                        }
+                }
+        }
+        table += "</table>";
+        return table;
+}
