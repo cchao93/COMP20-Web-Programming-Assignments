@@ -1,4 +1,5 @@
 var request = new XMLHttpRequest();
+var current_color;
 
 var blue_coords = new Array();
 var orange_coords = new Array();
@@ -64,6 +65,10 @@ red_coords[20] = {"station":"Shawmut","lat":"42.29312583","lng":"-71.06573796000
 red_coords[9] = {"station":"South Station","lat":"42.352271","lng":"-71.05524200000001"};
 red_coords[14] = {"station":"Wollaston","lat":"42.2665139","lng":"-71.0203369"};
 
+Number.prototype.toRad = function() {
+        return this * Math.PI / 180;
+}
+
 function init_page()
 {
         get_request();
@@ -81,6 +86,7 @@ function check_readyState()
 {
         if (request.readyState == 4 && request.status == 200) {
                 var request_data = JSON.parse(request.responseText);
+                current_color = request_data["line"];
                 create_stations(request_data);
         } else if (request.readyState == 4 && request.status == 500){
                 init_page();
@@ -120,9 +126,61 @@ function mark_location(lat, lng)
                 position: location,
                 map: map 
         });
+        var closest = get_closest_stop(lat, lng);
         info_window = new google.maps.InfoWindow();
-        info_window.setContent("I am here at "+lat+", "+lng);
+        info_window.setContent("You are here at ("+lat+", "+lng+
+                "), about "+closest["dist"]+
+                " miles away from the closest T stop, "+closest["stop"]+
+                ".");
         info_window.open(map, marker);
+}
+
+function get_closest_stop(lat, lng)
+{
+        var closest_stop = "";
+        var closest_dist = 1000000;
+        var closest = new Array();
+        if (current_color == "blue") {
+                stops = blue_coords;
+                num_stops = NUM_BLUES;
+        } else if (current_color == "orange") {
+                stops = orange_coords;
+                num_stops = NUM_ORANGES;
+        } else {
+                stops = red_coords;
+                num_stops = NUM_REDS;
+        }
+        for (var i = 0; i < num_stops; i++) {
+                stop = stops[i];
+                if (calculate_dist(lat, lng, stop) < closest_dist) {
+                        closest_stop = stop.station;
+                        closest_dist = calculate_dist(lat, lng, stop);
+                }
+        }
+        closest["stop"] = closest_stop;
+        closest["dist"] = Math.round(closest_dist);
+        return closest;
+}
+
+function calculate_dist(lat, lng, stop)
+{
+        var R = 6371; // km
+        var miles_per_km = 0.621371;
+        var lat_temp = lat - Number(stop.lat);
+        var d_lat = lat_temp.toRad();
+        var lng_temp = lng - Number(stop.lng);
+        var d_lng = lng_temp.toRad();
+        var lat1 = (Number(stop.lat)).toRad();
+        var lat2 = lat.toRad();
+        
+        var a = Math.sin(d_lat/2) * Math.sin(d_lat/2) +
+                Math.sin(d_lng/2) * Math.sin(d_lng/2) *
+                Math.cos(lat1) * Math.cos(lat2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        var d = R * c;
+        d = d * miles_per_km;
+
+        return d;
 }
 
 function create_stations(request_data)
