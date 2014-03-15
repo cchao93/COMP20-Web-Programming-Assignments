@@ -1,9 +1,9 @@
-// Chia-Chi (Victor) Chao
-// COMP20 Assignment 3
-//
-// Description: Shows a real-time T schedule with T stops on the map,
-//              finds the closest stop from user's current location
-//
+/* Chia-Chi (Victor) Chao
+ * COMP20 Assignment 3
+ *
+ * Description: Shows a real-time T schedule with T stops on the map,
+ *            finds the closest stop from user's current location
+ */
 var request = new XMLHttpRequest();
 var current_color;
 
@@ -11,11 +11,14 @@ var blue_coords = new Array();
 var orange_coords = new Array();
 var red_coords = new Array();
 
+/* number of stops for each line */
 var NUM_BLUES = 12;
 var NUM_ORANGES = 19;
 var NUM_REDS = 22;
 
-// Arrays of T stops for all 3 lines, in alphabetical order
+var BIG_NUM = 1000000;
+
+/* Arrays of T stops for all 3 lines, in alphabetical order */
 blue_coords[6] = {"station":"Airport","lat":"42.374262","lng":"-71.030395"};
 blue_coords[8] = {"station":"Aquarium","lat":"42.359784","lng":"-71.051652"};
 blue_coords[2] = {"station":"Beachmont","lat":"42.39754234","lng":"-70.99231944"};
@@ -72,17 +75,12 @@ red_coords[20] = {"station":"Shawmut","lat":"42.29312583","lng":"-71.06573796000
 red_coords[9] = {"station":"South Station","lat":"42.352271","lng":"-71.05524200000001"};
 red_coords[14] = {"station":"Wollaston","lat":"42.2665139","lng":"-71.0203369"};
 
+/* for calculating distance */
 Number.prototype.toRad = function() {
         return this * Math.PI / 180;
 }
 
 function init_page()
-{
-        get_request();
-        init_map();
-}
-
-function get_request()
 {
         request.open("get", "http://mbtamap.herokuapp.com/mapper/rodeo.json", true);
         request.onreadystatechange = check_readyState;
@@ -93,9 +91,11 @@ function check_readyState()
 {
         if (request.readyState == 4 && request.status == 200) {
                 var request_data = JSON.parse(request.responseText);
+                init_map();
                 current_color = request_data["line"];
                 create_stations(request_data);
         } else if (request.readyState == 4 && request.status == 500){
+                /* gets the request again of there is a 500 error */
                 init_page();
         }
 }
@@ -103,9 +103,10 @@ function check_readyState()
 function init_map()
 {
         var mapOptions = {
-                center: new google.maps.LatLng(42.2129, 71.0337),
+                center: new google.maps.LatLng(42.3581, -71.0636),
                 zoom: 12
         };
+        /* render the map */
         map = new google.maps.Map(
                 document.getElementById("map-canvas"), mapOptions);
         get_current_location();
@@ -125,6 +126,9 @@ function get_current_location()
 
 }
 
+/* sets a marker at user's current location and displays
+ * an info window
+ */
 function mark_location(lat, lng)
 {
         var location = new google.maps.LatLng(lat, lng);
@@ -142,10 +146,14 @@ function mark_location(lat, lng)
         info_window.open(map, marker);
 }
 
+/* finds closest stop from user's current location */
 function get_closest_stop(lat, lng)
 {
+        var stops;
+        var stop;
+        var num_stops;
         var closest_stop = "";
-        var closest_dist = 1000000;
+        var closest_dist = BIG_NUM;
         var closest = new Array();
         if (current_color == "blue") {
                 stops = blue_coords;
@@ -171,6 +179,10 @@ function get_closest_stop(lat, lng)
 
 function calculate_dist(lat, lng, stop)
 {
+        /* calcuation from
+           http://www.movable-type.co.uk/scripts/latlong.html
+           and http://stackoverflow.com/questions/
+                14560999/using-the-haversine-formula-in-javascript */
         var R = 6371; // km
         var miles_per_km = 0.621371;
         var lat_temp = lat - Number(stop.lat);
@@ -185,16 +197,17 @@ function calculate_dist(lat, lng, stop)
                 Math.cos(lat1) * Math.cos(lat2);
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         var d = R * c;
-        d = d * miles_per_km;
+        d = d * miles_per_km; // convert to miles
 
         return d;
 }
 
+/* put a marker on each station */
 function create_stations(request_data)
 {
         var color = request_data["line"];
         var polyline_coords = new Array();
-        var polyline_diversion = new Array();
+        var polyline_diversion = new Array(); // for Red line
         var j = 0;
         if (color == "blue") {
                 for (var i = 0; i < NUM_BLUES; i++) {
@@ -232,7 +245,7 @@ function create_stations(request_data)
                         if (i <= 17) {
                                 polyline_coords[i] = location;
                         } else {
-                                j++;
+                                j++; // red line special case
                                 polyline_diversion[j] = location;
                         }
                         if (i == 12) {
@@ -245,11 +258,13 @@ function create_stations(request_data)
                         });
                         display_schedule(request_data, marker, i);
                 }
+                // 2 diverging lines
                 display_polyline(map, polyline_coords, color);
                 display_polyline(map, polyline_diversion, color);
         }
 }
 
+/* draws a line through each stop */
 function display_polyline(map, polyline_coords, color)
 {
         var polylineOptions = {
@@ -271,6 +286,7 @@ function display_schedule(request_data, marker, stop_id)
         });
 }
 
+/* creates a table for each info window */
 function parse_schedule_data(request_data, stop_id)
 {
         var stop;
