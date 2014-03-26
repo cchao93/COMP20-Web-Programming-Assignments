@@ -8,28 +8,20 @@
                 function updateMessage()
                 {
                         var now = new Date();
-                        var monthNode =
-                             document.createTextNode(now.getMonth()+"/");
-                        var dateNode =
-                             document.createTextNode(now.getDate()+"/");
-                        var yearNode =
-                             document.createTextNode(now.getFullYear()+" ");
-                        var hourNode =
-                             document.createTextNode(now.getHours()+":");
-                        var minNode =
-                             document.createTextNode(now.getMinutes()+" - ");
-                        var message = document.getElementById("msg").value;
-                        var msgNode = document.createTextNode(message);
-                        var paragraph = document.createElement("p");
-                        paragraph.appendChild(monthNode);
-                        paragraph.appendChild(dateNode);
-                        paragraph.appendChild(yearNode);
-                        paragraph.appendChild(hourNode);
-                        paragraph.appendChild(minNode);
-                        paragraph.appendChild(msgNode);
-                        document.getElementById("status").insertBefore
-                             (paragraph, document.getElementById
-                             ("status").firstChild);
+                        var message = "";
+                        message = message +
+                                now.getMonth() + "/" + now.getDate() +
+                                "/" + now.getFullYear() + " " +
+                                now.getHours()+ ":" + now.getMinutes() +
+                                " - " +
+                                document.getElementById("msg").value;
+                        localStorage[new Date().getTime()] = message;
+                        var output = "";
+                        for (key in localStorage) {
+                                output = "<p>" + localStorage[key]
+                                        + "</p>\n" + output;
+                        }
+                        document.getElementById("status").innerHTML = output;
                 }
         </script>
 </head>
