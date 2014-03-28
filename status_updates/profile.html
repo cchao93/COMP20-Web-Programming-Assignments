@@ -13,9 +13,14 @@
                                 (now.getMonth()+1) + "/" + now.getDate() +
                                 "/" + now.getFullYear() + " " +
                                 now.getHours()+ ":" + now.getMinutes() +
-                                " - " +
-                                document.getElementById("msg").value;
+                                " - " + document.getElementById("msg").value;
+
                         localStorage[new Date().getTime()] = message;
+                        displayMessages();
+                }
+
+                function displayMessages()
+                {
                         var output = "";
                         for (key in localStorage) {
                                 output = "<p>" + localStorage[key]
@@ -26,7 +31,7 @@
         </script>
 </head>
 
-<body>
+<body onload="displayMessages()">
 	<h1>Fecebook</h1>
 	<div id="nav">
 		<ul>
