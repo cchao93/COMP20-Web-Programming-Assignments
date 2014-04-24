@@ -1,8 +1,42 @@
 <!DOCTYPE html>
 <head>
-	<title>2048 Gamecenter Security Assessment</title>
+	<title>2048 Game Center Security Assessment</title>
 </head>
 <body>
-	<h1>2048 Gamecenter Security Assessment</h1>
+	<h1>2048 Game Center Security Assessment</h1>
+	<p>Chia-Chi (Victor) Chao</p>
+	<h2>Introduction</h2>
+	<p>2048 Game Center is a server-side web application developed by Corey
+           Mason, with the goal of maintaining final scores and grids of 2048
+	   players for an indefinite period of time. Within the web application
+           are three APIs--one allows its users to submit their final scores
+	   and grids, the other allows them to retrieve those data, and the last
+           one allows them to visualize scores submitted by all players.
+        </p>
+	<p>The objective of this assessment report is to pinpoint where the
+           security issues and potential security issues of the web application
+           are, and further provide suggestions on how to solve those issues.
+        </p>
+	<h2>Methodology</h2>
+	<p>Black-box testing was performed to assess the security of the
+           application. Techniques used include "curl"..........., applying
+	   directly on the Heroku URI--fathomless-plateau-9464.herokuapp.com.
+           Using those techniques/tools, three security issues were discovered
+           and documented in this report.
+        </p>
+	<h2>Abstract of Findings</h2>
+	<p>The security issues discovered and addressed in this assessment
+	   report can all be attributed to one major flaw in the development
+           process of the web application--trusting the users too much. The
+	   application assumes the good intentions of the users as well as the
+	   correctness of their inputs while submitting scores and grids,
+	   without actively validating them. This could be dangerous as it 
+           leaves a window open for people with intentions to perform attacks
+           by submitting malicious inputs which could potentially break the
+	   application.
+	</p>
+	<h2>Issues Found</h2>
+	<p>
+	</p>
 </body>
 </html>
