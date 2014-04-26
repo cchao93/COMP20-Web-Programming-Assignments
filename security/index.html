@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <head>
 	<title>2048 Game Center Security Assessment</title>
+        <link rel="stylesheet" href="index.css" />
 </head>
 <body>
 	<h1>2048 Game Center Security Assessment</h1>
-	<p>Chia-Chi (Victor) Chao</p>
+	<p id="name">Chia-Chi (Victor) Chao</p>
 	<h2>Introduction</h2>
 	<p>2048 Game Center is a server-side web application developed by Corey
            Mason, with the goal of maintaining final scores and grids of 2048
@@ -19,9 +20,9 @@
         </p>
 	<h2>Methodology</h2>
 	<p>Black-box testing was performed to assess the security of the
-           application. Techniques used include "curl"..........., applying
+           application. The major technique used was "curl", applying
 	   directly on the Heroku URI--fathomless-plateau-9464.herokuapp.com.
-           Using those techniques/tools, three security issues were discovered
+           Using the technique in various ways, three security issues were discovered
            and documented in this report.
         </p>
 	<h2>Abstract of Findings</h2>
@@ -36,7 +37,83 @@
 	   application.
 	</p>
 	<h2>Issues Found</h2>
-	<p>
-	</p>
+	<ol><li><h3>Cross Site Scripting (XSS)</h3>
+                <p>The issue was found in the application's submit.json API.
+		   It has a high severity because any user or developer with
+		   access to the web application and possibly its source code
+		   can submit malicious data using the POST API.
+		</p>
+		<p>Through the use of a simple tool such as curl, the users
+		   are able to submit HTML and/or JavaScript as username, score,
+		   or grid. Because the input fields are not validated, the
+ 	           HTML and/or JavaScript are injected directly into the MongoDB
+		   database. Once the scores.json or the root GET API is
+                   executed, the code within the data fields will also be
+                   executed, creating unwanted side effects on the site.
+		</p>
+		<p>By executing the commands curl --data 
+                   "username=&lt;iframe='http://www.youtube.com/watch?v=jofNR_WkoCE'&gt;
+                   &lt;/iframe&gt;&amp;score=99999&amp;grid=[]"
+                   http://fathomless-plateau-9464.herokuapp.com/submit.json, and
+                   curl --data "username=&lt;iframe src='http://omfgdogs.com'&gt;
+                   &lt;/iframe&gt;&amp;score=99999&amp;grid=[]"
+                   http://fathomless-plateau-9464.herokuapp.com/submit.json, the iframes
+                   are injected into the web application like the following:
+                <p><img src="resources/xxs.png" alt="XXS Demo"
+                                           height="400px" width="600px"/></p>
+		</p>
+                <p>This issue can be resolved by validating inputs, such as
+                   replacing "&lt;" and "&gt;" with "&amp;lt" and "&amp;gt", respectively.
+                </p>
+           </li>
+	   <li><h3>Unsafe Query</h3>
+               <p>The issue was found in the the web application's scores.json API.
+		  It has a high severity because any user with access to the application
+                  can access the entire MongoDB database using query on the GET API. 
+               </p>
+               <p>By adding the keyword [$ne], which stands for "not equal" in the query,
+		  the users can obtain all data in the database except for the ones they
+                  query for on the GET API. In the context of this application,
+                  if the query http://fathomless-plateau-9464.herokuapp.com/scores.json
+                  ?username[$ne]=mchow is made, all the scores and grids whose
+                  username field is not "mchow" will show up in JSON, like the following:
+               <p><img src="resources/query.png" alt="Query Demo"
+                                           height="400px" width="600px"/></p>
+	       </p>
+	       <p>This issue can be resolved by sanitizing query inputs to ensure there
+                  are no special characters.
+               </p>
+           </li>
+           <li><h3>Denial-of-Service (DOS) Attack</h3>
+               <p>The issue was discovered in the application's submit.json API.
+                  It has a medium severity because even though any user or
+                  developer with access to the application and possibly its
+                  source code can break it by repeatedly submitting data using
+                  the POST API, it can be quickly restored by simply sanitizing
+                  the database.
+               </p>
+               <p>Because MongoLab limits the database quota to 496 MB for an unpaid
+                  user, if curl, the tool brought up in the first security issue, is
+                  used repeatedly to submit data to the database using the POST API,
+                  and the total size of data exceeds the quota, the result will be an
+                  application error, or a denial of service.
+               </p>
+               <p>By running the following bash script:
+               <p><img src="resources/dos_code.png" alt="DOS Script"
+                                           height="400px" width="600px"/></p>
+	       </p>
+                  the curl commands broke the web application by posting huge amounts
+                  of data:
+                  .....
+               </p>
+               <p>The issue can be resolved, again, by validating user inputs.
+               </p>
+           </li>
+        </ol>
+        <h2>Conclusion</h2>
+        <p>The security issues addressed in the assessment can be solved by implementing
+           series of validations and verification for the GET and the POST APIs, which
+           would cost approximately $1000. 
+        </p>
 </body>
 </html>
